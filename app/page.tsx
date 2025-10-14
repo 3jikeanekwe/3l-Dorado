@@ -105,3 +105,41 @@ export default function Home() {
               { name: 'Dodgeball', players: '8-32 players', img: '🏐' },
               { name: 'Musical Chairs', players: '64 players', img: '🪑' },
             ].map((game) => (
+              <div key={game.name} className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:border-yellow-400/50 transition">
+                <div className="text-6xl mb-4">{game.img}</div>
+                <h3 className="text-xl font-bold text-white mb-2">{game.name}</h3>
+                <p className="text-gray-400">{game.players}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Call to Action */}
+        <div className="mt-20 text-center bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-2xl p-12 border border-yellow-500/30">
+          <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
+            Ready to Compete?
+          </h2>
+          <p className="text-xl text-gray-300 mb-8">
+            Join thousands of players and start winning today
+          </p>
+          <Link
+            href="/signup"
+            className="inline-block px-12 py-4 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition font-bold text-lg"
+          >
+            Create Free Account
+          </Link>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="bg-black/40 backdrop-blur-sm border-t border-white/10 mt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center text-gray-400">
+            <p>&copy; 2024 El Dorado Gaming Platform. All rights reserved.</p>
+            <p className="mt-2 text-sm">Play responsibly. 18+ only.</p>
+          </div>
+        </div>
+      </footer>
+    </main>
+  )
+}
