@@ -129,4 +129,46 @@ export default function AdminDashboard() {
       {/* Quick Actions */}
       <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 mb-8">
         <h2 className="text-xl font-bold text-white mb-4">Quick Actions</h2>
-        <div className="grid gri
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button className="p-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-semibold transition">
+            Create New Game
+          </button>
+          <button className="p-4 bg-purple-600 hover:bg-purple-700 rounded-lg text-white font-semibold transition">
+            Invite Admin
+          </button>
+          <button className="p-4 bg-green-600 hover:bg-green-700 rounded-lg text-white font-semibold transition">
+            View Sessions
+          </button>
+        </div>
+      </div>
+
+      {/* Recent Activity */}
+      <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+        <h2 className="text-xl font-bold text-white mb-4">Recent Activity</h2>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+            <div>
+              <p className="text-white font-medium">New user registered</p>
+              <p className="text-sm text-gray-400">2 minutes ago</p>
+            </div>
+            <span className="text-xs bg-green-600 text-white px-2 py-1 rounded">New</span>
+          </div>
+          <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+            <div>
+              <p className="text-white font-medium">Game session completed</p>
+              <p className="text-sm text-gray-400">5 minutes ago</p>
+            </div>
+            <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">Completed</span>
+          </div>
+          <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+            <div>
+              <p className="text-white font-medium">USDC deposit received</p>
+              <p className="text-sm text-gray-400">10 minutes ago</p>
+            </div>
+            <span className="text-xs bg-yellow-600 text-white px-2 py-1 rounded">Transaction</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
