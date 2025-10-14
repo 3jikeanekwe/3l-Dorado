@@ -175,4 +175,58 @@ export default function ProfilePage() {
                         className={`font-bold ${
                           transaction.type === 'prize' || transaction.type === 'deposit'
                             ? 'text-green-400'
-                            :
+                            : 'text-red-400'
+                        }`}
+                      >
+                        {transaction.type === 'prize' || transaction.type === 'deposit' ? '+' : '-'}$
+                        {Number(transaction.amount).toFixed(2)}
+                      </p>
+                      <p className={`text-xs ${
+                        transaction.status === 'completed' ? 'text-green-400' : 
+                        transaction.status === 'pending' ? 'text-yellow-400' : 'text-red-400'
+                      }`}>
+                        {transaction.status}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Edit Profile (Placeholder) */}
+          <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+            <h3 className="text-xl font-bold text-white mb-4">Account Settings</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  value={profile?.username || ''}
+                  disabled
+                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white disabled:opacity-50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={profile?.email || ''}
+                  disabled
+                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white disabled:opacity-50"
+                />
+              </div>
+              <button className="w-full py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition font-bold">
+                Update Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
