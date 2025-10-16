@@ -1,0 +1,64 @@
+{
+  "project": "El Dorado Gaming Platform",
+  "version": "1.0.0",
+  "multiPlatformSetup": true,
+  "platforms": {
+    "vercel": {
+      "purpose": "Frontend hosting (Next.js app)",
+      "features": [
+        "Main web application",
+        "Static site generation",
+        "Serverless API routes",
+        "Automatic deployments"
+      ],
+      "environment": "production"
+    },
+    "netlify": {
+      "purpose": "Marketing site & docs",
+      "features": [
+        "Landing page",
+        "Documentation site",
+        "Staging environment",
+        "Form submissions"
+      ],
+      "environment": "staging"
+    },
+    "render": {
+      "purpose": "Backend API & game server",
+      "features": [
+        "Custom Node.js backend",
+        "WebSocket server",
+        "Game logic processing",
+        "Cron jobs for cleanup"
+      ],
+      "environment": "production"
+    },
+    "supabase": {
+      "purpose": "Central database & real-time",
+      "features": [
+        "PostgreSQL database",
+        "Authentication",
+        "Real-time subscriptions",
+        "Storage for assets",
+        "Edge functions"
+      ],
+      "environment": "production"
+    },
+    "firebase": {
+      "purpose": "Additional auth & analytics",
+      "features": [
+        "Google OAuth",
+        "Phone authentication",
+        "Analytics",
+        "Cloud messaging"
+      ],
+      "environment": "production"
+    }
+  },
+  "dataFlow": {
+    "frontend": "Vercel/Netlify → Firebase Auth → Supabase",
+    "backend": "Render → Supabase (via service role key)",
+    "realtime": "Supabase → All platforms (via subscriptions)",
+    "storage": "Supabase Storage → CDN → Frontend"
+  }
+}
