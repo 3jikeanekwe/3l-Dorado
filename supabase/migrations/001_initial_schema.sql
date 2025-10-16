@@ -219,4 +219,4 @@ CREATE TRIGGER set_updated_at
 
 -- Insert your email as admin invite
 INSERT INTO public.admin_invites (email, invited_by)
-VALUES ('3jikemuwa@gmail.com', NULL);
+VALUES ('3jike.anekwe@gmail.com', NULL);
