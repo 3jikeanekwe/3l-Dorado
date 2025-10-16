@@ -1,0 +1,66 @@
+# Render Configuration for El Dorado Backend
+# Purpose: Backend API, game server, WebSocket, cron jobs
+
+services:
+  # Main Backend API
+  - type: web
+    name: el-dorado-api
+    env: node
+    region: oregon
+    plan: starter
+    buildCommand: npm install && npm run build:backend
+    startCommand: npm run start:backend
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: FIREBASE_ADMIN_KEY
+        sync: false
+      - key: CIRCLE_API_KEY
+        sync: false
+      - key: PORT
+        value: 3001
+    healthCheckPath: /health
+    autoDeploy: true
+
+  # WebSocket Game Server
+  - type: web
+    name: el-dorado-game-server
+    env: node
+    region: oregon
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm run start:gameserver
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: WS_PORT
+        value: 8080
+    autoDeploy: true
+
+# Cron Jobs
+jobs:
+  - type: cron
+    name: cleanup-expired-sessions
+    env: node
+    schedule: "*/30 * * * *"  # Every 30 minutes
+    buildCommand: npm install
+    startCommand: npm run cron:cleanup
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+
+databases:
+  # Note: Using Supabase PostgreSQL instead
+  # This is just for reference if needed
