@@ -69,9 +69,6 @@ export default function WalletPage() {
     setProcessing(true)
 
     try {
-      // TODO: Integrate Circle API or payment provider
-      // For now, just add to balance (development only)
-      
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
 
@@ -90,7 +87,7 @@ export default function WalletPage() {
 
       if (txError) throw txError
 
-      // Update balance (in production, this happens after payment confirmation)
+      // Update balance
       const { error: balanceError } = await supabase
         .from('profiles')
         .update({
@@ -142,7 +139,7 @@ export default function WalletPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
 
-      // Calculate fee (2%, minimum $0.50)
+      // Calculate fee
       const fee = Math.max(withdrawAmount * 0.02, 0.5)
       const totalDeduction = withdrawAmount + fee
 
@@ -177,7 +174,7 @@ export default function WalletPage() {
 
       if (balanceError) throw balanceError
 
-      // Mark transaction as completed (in production, this happens after blockchain confirmation)
+      // Mark transaction as completed
       await supabase
         .from('transactions')
         .update({ status: 'completed' })
@@ -300,6 +297,74 @@ export default function WalletPage() {
         </div>
       )}
 
+      {/* Withdraw Form */}
+      {showWithdraw && (
+        <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold text-white">Withdraw USDC</h3>
+            <button
+              onClick={() => setShowWithdraw(false)}
+              className="text-gray-400 hover:text-white"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Amount (USD)
+              </label>
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                min="5"
+                step="0.01"
+                max={profile?.balance || 0}
+                placeholder="0.00"
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-400"
+              />
+              <p className="text-sm text-gray-400 mt-1">
+                Minimum: $5.00 | Fee: 2% (min $0.50)
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Wallet Address
+              </label>
+              <input
+                type="text"
+                value={walletAddress}
+                onChange={(e) => setWalletAddress(e.target.value)}
+                placeholder="0x..."
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+              />
+              <p className="text-sm text-gray-400 mt-1">Polygon (MATIC) network</p>
+            </div>
+
+            <div className="bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-4">
+              <div className="flex items-start space-x-3">
+                <AlertCircle className="h-5 w-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-yellow-200">
+                  <p className="font-semibold mb-1">Development Mode</p>
+                  <p>This is a demo withdrawal. In production, USDC will be sent to your wallet via Circle API.</p>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={handleWithdraw}
+              disabled={processing}
+              className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-bold disabled:opacity-50"
+            >
+              {processing ? 'Processing...' : 'Withdraw USDC'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Transaction History */}
       <div className="bg-gray-800 rounded-xl border border-gray-700">
         <div className="p-6 border-b border-gray-700">
@@ -404,72 +469,3 @@ export default function WalletPage() {
     </div>
   )
 }
-
-      )}
-
-      {/* Withdraw Form */}
-      {showWithdraw && (
-        <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold text-white">Withdraw USDC</h3>
-            <button
-              onClick={() => setShowWithdraw(false)}
-              className="text-gray-400 hover:text-white"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Amount (USD)
-              </label>
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                min="5"
-                step="0.01"
-                max={profile?.balance || 0}
-                placeholder="0.00"
-                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-400"
-              />
-              <p className="text-sm text-gray-400 mt-1">
-                Minimum: $5.00 | Fee: 2% (min $0.50)
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Wallet Address
-              </label>
-              <input
-                type="text"
-                value={walletAddress}
-                onChange={(e) => setWalletAddress(e.target.value)}
-                placeholder="0x..."
-                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
-              />
-              <p className="text-sm text-gray-400 mt-1">Polygon (MATIC) network</p>
-            </div>
-
-            <div className="bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-4">
-              <div className="flex items-start space-x-3">
-                <AlertCircle className="h-5 w-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                <div className="text-sm text-yellow-200">
-                  <p className="font-semibold mb-1">Development Mode</p>
-                  <p>This is a demo withdrawal. In production, USDC will be sent to your wallet via Circle API.</p>
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={handleWithdraw}
-              disabled={processing}
-              className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-bold disabled:opacity-50"
-            >
-              {processing ? 'Processing...' : 'Withdraw USDC'}
-            </button>
-          </div>
-        </div>
