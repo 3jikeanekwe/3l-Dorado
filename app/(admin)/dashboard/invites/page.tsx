@@ -13,8 +13,11 @@ export default function InvitesPage() {
   const [sending, setSending] = useState(false)
 
   useEffect(() => {
-    fetchInvites()
-  }, [supabase])
+  fetchInvites()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [])
+    
+  
 
   const fetchInvites = async () => {
     try {
