@@ -25,8 +25,9 @@ export default function WalletPage() {
   const [processing, setProcessing] = useState(false)
 
   useEffect(() => {
-    fetchWalletData()
-  }, [supabase])
+  fetchWalletData()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [])
 
   const fetchWalletData = async () => {
     try {
