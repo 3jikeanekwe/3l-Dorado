@@ -24,28 +24,20 @@ export default function PlayGamePage() {
   const [leaderboard, setLeaderboard] = useState<any[]>([])
 
   useEffect(() => {
-  fetchSessionData()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [])
-    
-  
+    fetchSessionData()
+  }, [sessionId, supabase])
 
   useEffect(() => {
     if (canvasRef.current && game && !engineRef.current) {
       initializeGame()
     }
 
-    useEffect(() => {
-  if (canvasRef.current && game && !engineRef.current) {
-    initializeGame()
-  }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [game])
-      
-        
-      
-    
-  
+    return () => {
+      if (engineRef.current) {
+        engineRef.current.destroy()
+      }
+    }
+  }, [game])
 
   const fetchSessionData = async () => {
     try {
@@ -413,9 +405,8 @@ export default function PlayGamePage() {
           </div>
         </div>
       </div>
-        </div>
-    )
-  }
-    
+    </div>
+  )
+        }
   
   
