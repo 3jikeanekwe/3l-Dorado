@@ -128,10 +128,16 @@ export async function signOutUser() {
   }
 }
 
-export default {
+const firebaseAuth = {
   signInWithGoogle,
   signInWithEmail,
   signUpWithEmail,
   signOutUser,
   syncFirebaseUserToSupabase,
-      }
+}
+  
+  
+  
+  
+  
+      
