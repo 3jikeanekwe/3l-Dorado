@@ -186,10 +186,10 @@ export default function GamesPage() {
               <div className="aspect-video bg-gray-700 flex items-center justify-center">
                 {game.thumbnail_url ? (
                   <img
-                    src={game.thumbnail_url}
-                    alt={game.name}
-                    className="w-full h-full object-cover"
-                  />
+  src={game.thumbnail_url}
+  alt={`${game.name} thumbnail`}
+  className="w-full h-full object-cover"
+/>
                 ) : (
                   <span className="text-6xl">🎮</span>
                 )}
