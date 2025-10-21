@@ -24,20 +24,28 @@ export default function PlayGamePage() {
   const [leaderboard, setLeaderboard] = useState<any[]>([])
 
   useEffect(() => {
-    fetchSessionData()
-  }, [sessionId, supabase])
+  fetchSessionData()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [])
+    
+  
 
   useEffect(() => {
     if (canvasRef.current && game && !engineRef.current) {
       initializeGame()
     }
 
-    return () => {
-      if (engineRef.current) {
-        engineRef.current.destroy()
-      }
-    }
-  }, [game])
+    useEffect(() => {
+  if (canvasRef.current && game && !engineRef.current) {
+    initializeGame()
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [game])
+      
+        
+      
+    
+  
 
   const fetchSessionData = async () => {
     try {
