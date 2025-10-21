@@ -14,8 +14,11 @@ export default function GamesPage() {
   const [filter, setFilter] = useState<'all' | 'draft' | 'published' | 'archived'>('all')
 
   useEffect(() => {
-    fetchGames()
-  }, [supabase])
+  fetchGames()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [])
+    
+  
 
   const fetchGames = async () => {
     try {
