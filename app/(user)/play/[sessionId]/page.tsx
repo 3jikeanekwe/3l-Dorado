@@ -413,6 +413,9 @@ export default function PlayGamePage() {
           </div>
         </div>
       </div>
-    </div>
-  )
+        </div>
+    )
   }
+    
+  
+  
