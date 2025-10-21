@@ -281,7 +281,7 @@ export default function WalletPage() {
                 <AlertCircle className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
                 <div className="text-sm text-blue-200">
                   <p className="font-semibold mb-1">Development Mode</p>
-                  <p>This is a demo deposit. In production, you'll connect your wallet or use Circle API for real USDC deposits.</p>
+                  <p>This is a demo deposit. In production,you&apos;ll connect your wallet.</p>
                 </div>
               </div>
             </div>
