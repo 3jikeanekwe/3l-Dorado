@@ -3,67 +3,43 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
-import { Trophy, Mail, Lock, User, AlertCircle, CheckCircle } from 'lucide-react'
+import { signInWithEmail, signInWithGoogle } from '@/lib/firebase/auth-sync'
+import { Trophy, Mail, Lock, AlertCircle } from 'lucide-react'
 
-export default function SignupPage() {
+export default function LoginPage() {
   const router = useRouter()
-  const supabase = createClient()
   
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [username, setUsername] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
-    setSuccess(false)
 
-    try {
-      // Sign up the user
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username,
-          },
-        },
-      })
+    const result = await signInWithEmail(email, password)
 
-      if (signUpError) throw signUpError
-
-      if (data.user) {
-        setSuccess(true)
-        
-        // Redirect after 2 seconds
-        setTimeout(() => {
-          router.push('/login')
-        }, 2000)
-      }
-    } catch (err: any) {
-      setError(err.message || 'Failed to create account')
-    } finally {
+    if (result.success) {
+      router.push('/lobby')
+    } else {
+      setError(result.error || 'Failed to login')
       setLoading(false)
     }
   }
 
-  const handleGoogleSignup = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/api/auth/callback`,
-        },
-      })
+  const handleGoogleLogin = async () => {
+    setLoading(true)
+    setError(null)
 
-      if (error) throw error
-    } catch (err: any) {
-      setError(err.message || 'Failed to sign up with Google')
+    const result = await signInWithGoogle()
+
+    if (result.success) {
+      router.push('/lobby')
+    } else {
+      setError(result.error || 'Failed to login with Google')
+      setLoading(false)
     }
   }
 
@@ -75,11 +51,11 @@ export default function SignupPage() {
           <div className="flex justify-center mb-4">
             <Trophy className="h-16 w-16 text-yellow-400" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Join El Dorado</h1>
-          <p className="text-gray-400">Create your account and start winning</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
+          <p className="text-gray-400">Login to continue to El Dorado</p>
         </div>
 
-        {/* Signup Form */}
+        {/* Login Form */}
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
           {error && (
             <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg flex items-start space-x-3">
@@ -88,18 +64,12 @@ export default function SignupPage() {
             </div>
           )}
 
-          {success && (
-            <div className="mb-6 p-4 bg-green-500/20 border border-green-500/50 rounded-lg flex items-start space-x-3">
-              <CheckCircle className="h-5 w-5 text-green-400 flex-shrink-0 mt-0.5" />
-              <p className="text-green-200 text-sm">Account created successfully! Redirecting to login...</p>
-            </div>
-          )}
-
-          {/* Google Sign Up Button */}
+          {/* Google Login Button */}
           <button
-            onClick={handleGoogleSignup}
+            onClick={handleGoogleLogin}
             type="button"
-            className="w-full mb-6 py-3 px-4 bg-white text-gray-900 rounded-lg hover:bg-gray-100 transition font-bold flex items-center justify-center space-x-2"
+            disabled={loading}
+            className="w-full mb-6 py-3 px-4 bg-white text-gray-900 rounded-lg hover:bg-gray-100 transition font-bold flex items-center justify-center space-x-2 disabled:opacity-50"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -113,32 +83,11 @@ export default function SignupPage() {
           {/* Divider */}
           <div className="my-6 flex items-center">
             <div className="flex-1 border-t border-white/10"></div>
-            <span className="px-4 text-sm text-gray-400">or sign up with email</span>
+            <span className="px-4 text-sm text-gray-400">or</span>
             <div className="flex-1 border-t border-white/10"></div>
           </div>
 
-          <form onSubmit={handleSignup} className="space-y-6">
-            {/* Username */}
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
-                Username
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  id="username"
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
-                  minLength={3}
-                  maxLength={20}
-                  className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                  placeholder="Choose a username"
-                />
-              </div>
-            </div>
-
+          <form onSubmit={handleEmailLogin} className="space-y-6">
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
@@ -171,42 +120,35 @@ export default function SignupPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  minLength={6}
                   className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
                   placeholder="••••••••"
                 />
               </div>
-              <p className="mt-2 text-xs text-gray-400">Must be at least 6 characters</p>
-            </div>
-
-            {/* Terms */}
-            <div className="flex items-start space-x-2">
-              <input
-                type="checkbox"
-                required
-                className="mt-1 h-4 w-4 rounded border-white/20 bg-white/5 text-yellow-400 focus:ring-yellow-400"
-              />
-              <label className="text-sm text-gray-400">
-                I agree to the Terms of Service and Privacy Policy. I am 18+ years old.
-              </label>
             </div>
 
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading || success}
+              disabled={loading}
               className="w-full py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition font-bold disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Creating Account...' : 'Create Account'}
+              {loading ? 'Logging in...' : 'Login'}
             </button>
           </form>
 
-          {/* Login Link */}
-          <div className="mt-6 text-center">
+          {/* Divider */}
+          <div className="my-6 flex items-center">
+            <div className="flex-1 border-t border-white/10"></div>
+            <span className="px-4 text-sm text-gray-400">or</span>
+            <div className="flex-1 border-t border-white/10"></div>
+          </div>
+
+          {/* Sign Up Link */}
+          <div className="text-center">
             <p className="text-gray-400">
-              Already have an account?{' '}
-              <Link href="/login" className="text-yellow-400 hover:text-yellow-300 font-semibold">
-                Login
+              Don't have an account?{' '}
+              <Link href="/signup" className="text-yellow-400 hover:text-yellow-300 font-semibold">
+                Sign Up
               </Link>
             </p>
           </div>
@@ -221,4 +163,4 @@ export default function SignupPage() {
       </div>
     </div>
   )
-              }
+}
