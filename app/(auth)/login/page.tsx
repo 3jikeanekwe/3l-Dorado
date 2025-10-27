@@ -3,64 +3,43 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
+import { signInWithEmail, signInWithGoogle } from '@/lib/firebase/auth-sync'
 import { Trophy, Mail, Lock, AlertCircle } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
-  const supabase = createClient()
   
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
-    try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+    const result = await signInWithEmail(email, password)
 
-      if (signInError) throw signInError
-
-      if (data.user) {
-        // Check if user is admin
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', data.user.id)
-          .single()
-
-        if (profile?.role === 'admin') {
-          router.push('/dashboard')
-        } else {
-          router.push('/lobby')
-        }
-      }
-    } catch (err: any) {
-      setError(err.message || 'Failed to login')
-    } finally {
+    if (result.success) {
+      router.push('/lobby')
+    } else {
+      setError(result.error || 'Failed to login')
       setLoading(false)
     }
   }
 
   const handleGoogleLogin = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/api/auth/callback`,
-        },
-      })
+    setLoading(true)
+    setError(null)
 
-      if (error) throw error
-    } catch (err: any) {
-      setError(err.message || 'Failed to login with Google')
+    const result = await signInWithGoogle()
+
+    if (result.success) {
+      router.push('/lobby')
+    } else {
+      setError(result.error || 'Failed to login with Google')
+      setLoading(false)
     }
   }
 
@@ -89,7 +68,8 @@ export default function LoginPage() {
           <button
             onClick={handleGoogleLogin}
             type="button"
-            className="w-full mb-6 py-3 px-4 bg-white text-gray-900 rounded-lg hover:bg-gray-100 transition font-bold flex items-center justify-center space-x-2"
+            disabled={loading}
+            className="w-full mb-6 py-3 px-4 bg-white text-gray-900 rounded-lg hover:bg-gray-100 transition font-bold flex items-center justify-center space-x-2 disabled:opacity-50"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -107,7 +87,7 @@ export default function LoginPage() {
             <div className="flex-1 border-t border-white/10"></div>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={handleEmailLogin} className="space-y-6">
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
@@ -156,8 +136,15 @@ export default function LoginPage() {
             </button>
           </form>
 
+          {/* Divider */}
+          <div className="my-6 flex items-center">
+            <div className="flex-1 border-t border-white/10"></div>
+            <span className="px-4 text-sm text-gray-400">or</span>
+            <div className="flex-1 border-t border-white/10"></div>
+          </div>
+
           {/* Sign Up Link */}
-          <div className="mt-6 text-center">
+          <div className="text-center">
             <p className="text-gray-400">
               Don't have an account?{' '}
               <Link href="/signup" className="text-yellow-400 hover:text-yellow-300 font-semibold">
