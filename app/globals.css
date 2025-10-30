@@ -2,480 +2,117 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Ancient El Dorado Font */
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Philosopher:wght@400;700&display=swap');
+/* Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800;900&family=Philosopher:wght@400;700&display=swap');
 
+:root{
+  --gold:#FFD700;
+  --dark-gold:#B8860B;
+  --bronze:#CD7F32;
+  --stone:#2C2416;
+  --dark-stone:#1A1410;
+  --temple-gray:#3E3832;
+  --blood-red:#8B0000;
+  --jade:#00A86B;
+}
+
+/* Reset */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body,#__next{height:100%}
+body{
+  font-family:'Philosopher',sans-serif;
+  background:linear-gradient(135deg,#1A1410 0%, #2C2416 50%, #1A1410 100%);
+  color:var(--gold);
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* Gold particles */
+.gold-particle{
+  position:fixed;
+  width:5px;height:5px;border-radius:50%;
+  background:var(--gold); box-shadow:0 0 10px var(--gold);
+  pointer-events:none; z-index:0;
+  animation:float 6s ease-in-out infinite;
+}
+
+/* float */
+@keyframes float{
+  0%{transform:translateY(0) translateX(0);opacity:0.4}
+  50%{transform:translateY(-18px) translateX(10px);opacity:0.8}
+  100%{transform:translateY(0) translateX(0);opacity:0.4}
+}
+
+/* Headings */
+h1,h2,h3,h4,h5,h6{
+  font-family:'Cinzel',serif; font-weight:700; text-transform:uppercase; letter-spacing:1.6px;
+  text-shadow:0 0 10px rgba(255,215,0,0.45), 2px 2px 6px rgba(0,0,0,0.8);
+  color:var(--gold);
+}
+
+/* panels */
+.ancient-panel{
+  background:linear-gradient(135deg, rgba(44,36,22,0.95), rgba(26,20,16,0.98));
+  border:3px solid var(--dark-gold); padding:1.5rem;
+  box-shadow: inset 0 0 30px rgba(255,215,0,0.06), 0 8px 32px rgba(0,0,0,0.9);
+  position:relative;
+}
+
+/* button */
+.ancient-button{
+  background:linear-gradient(135deg,var(--dark-gold),var(--bronze));
+  border:2px solid var(--gold); color:var(--dark-stone);
+  font-family:'Cinzel',serif; font-weight:700; text-transform:uppercase;
+  padding:0.85rem 1.75rem; cursor:pointer; transition:all .25s;
+  box-shadow: 0 6px 18px rgba(255,215,0,0.25);
+}
+.ancient-button:hover{transform:translateY(-3px); box-shadow:0 10px 36px rgba(255,215,0,0.4)}
+
+/* loader */
+.ancient-loader{border:4px solid var(--temple-gray); border-top:4px solid var(--gold); width:48px;height:48px;border-radius:999px;animation:spin 1s linear infinite}
+@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+
+/* game hover */
+.game-card{transition:all .25s}
+.game-card:hover{transform:translateY(-8px) scale(1.02); box-shadow:0 12px 40px rgba(255,215,0,0.18)}
+
+/* scrollbar */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--dark-stone)}
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--dark-gold),var(--bronze));border-radius:8px}
+
+/* utility classes */
+.text-gold{color:var(--gold)}
+.text-bronze{color:var(--bronze)}
+.bg-dark-stone{background:var(--dark-stone)}
+.bg-stone{background:var(--stone)}
+.border-gold{border-color:var(--gold)}
+.text-jade{color:var(--jade)}
+.bg-jade{background:var(--jade)}
+
+/* modal + other */
+.ancient-modal{background:linear-gradient(135deg, rgba(26,20,16,0.98), rgba(44,36,22,0.98)); border:4px double var(--gold); padding:1.5rem}
+.ancient-divider{height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:1.5rem 0;position:relative}
+
+/* responsive */
+@media (max-width:768px){
+  .ancient-panel{padding:1rem}
+  h1{font-size:1.75rem}
+}
+
+/* small pulsing glow used for icons */
+@keyframes pulse-glow{0%,100%{box-shadow:0 0 20px rgba(255,215,0,0.2)}50%{box-shadow:0 0 40px rgba(255,215,0,0.45)}}
+.pulse-glow{animation:pulse-glow 2s ease-in-out infinite}
+
+/* Color vars for tailwind integration */
 :root {
-  --gold: #FFD700;
-  --dark-gold: #B8860B;
-  --bronze: #CD7F32;
-  --stone: #2C2416;
-  --dark-stone: #1A1410;
-  --temple-gray: #3E3832;
-  --blood-red: #8B0000;
-  --jade: #00A86B;
-  --ancient-blue: #2C4F6F;
+  --tw-gold: #FFD700;
+  --tw-dark-gold: #B8860B;
+  --tw-bronze: #CD7F32;
+  --tw-stone: #2C2416;
+  --tw-dark-stone: #1A1410;
+  --tw-jade: #00A86B;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'Philosopher', sans-serif;
-  background: linear-gradient(135deg, #1A1410 0%, #2C2416 50%, #1A1410 100%);
-  background-attachment: fixed;
-  color: var(--gold);
-  position: relative;
-  overflow-x: hidden;
-}
-
-/* Ancient Stone Texture Background */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: 
-    repeating-linear-gradient(
-      0deg,
-      rgba(255, 215, 0, 0.03) 0px,
-      transparent 1px,
-      transparent 2px,
-      rgba(255, 215, 0, 0.03) 3px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      rgba(255, 215, 0, 0.03) 0px,
-      transparent 1px,
-      transparent 2px,
-      rgba(255, 215, 0, 0.03) 3px
-    );
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.3;
-}
-
-/* Animated Gold Particles */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0) translateX(0);
-    opacity: 0.3;
-  }
-  50% {
-    transform: translateY(-20px) translateX(10px);
-    opacity: 0.6;
-  }
-}
-
-.gold-particle {
-  position: fixed;
-  width: 4px;
-  height: 4px;
-  background: var(--gold);
-  border-radius: 50%;
-  animation: float 6s ease-in-out infinite;
-  pointer-events: none;
-  box-shadow: 0 0 10px var(--gold);
-  z-index: 0;
-}
-
-/* Headings - Ancient Cinzel Font */
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Cinzel', serif;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  text-shadow: 
-    0 0 10px rgba(255, 215, 0, 0.5),
-    2px 2px 4px rgba(0, 0, 0, 0.8);
-  color: var(--gold);
-}
-
-h1 {
-  font-size: 3rem;
-  font-weight: 900;
-  background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FFD700 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: shimmer 3s ease-in-out infinite;
-}
-
-@keyframes shimmer {
-  0%, 100% {
-    filter: brightness(1);
-  }
-  50% {
-    filter: brightness(1.3);
-  }
-}
-
-/* Ancient Card/Panel Design */
-.ancient-panel {
-  background: linear-gradient(135deg, rgba(44, 36, 22, 0.95) 0%, rgba(26, 20, 16, 0.98) 100%);
-  border: 3px solid var(--dark-gold);
-  border-radius: 0;
-  position: relative;
-  box-shadow: 
-    inset 0 0 30px rgba(255, 215, 0, 0.1),
-    0 8px 32px rgba(0, 0, 0, 0.9),
-    0 0 0 1px rgba(255, 215, 0, 0.3);
-  padding: 2rem;
-}
-
-.ancient-panel::before {
-  content: '';
-  position: absolute;
-  top: -3px;
-  left: -3px;
-  right: -3px;
-  bottom: -3px;
-  background: linear-gradient(45deg, var(--gold), var(--bronze), var(--gold));
-  z-index: -1;
-  opacity: 0.3;
-  filter: blur(10px);
-}
-
-/* Corner Decorations */
-.ancient-panel::after {
-  content: '◆';
-  position: absolute;
-  top: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: var(--gold);
-  font-size: 1.5rem;
-  text-shadow: 0 0 10px var(--gold);
-}
-
-/* Ancient Button Style */
-.ancient-button {
-  background: linear-gradient(135deg, var(--dark-gold) 0%, var(--bronze) 50%, var(--dark-gold) 100%);
-  border: 2px solid var(--gold);
-  color: var(--dark-stone);
-  font-family: 'Cinzel', serif;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  padding: 1rem 2rem;
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 
-    0 4px 15px rgba(255, 215, 0, 0.3),
-    inset 0 0 20px rgba(255, 255, 255, 0.1);
-}
-
-.ancient-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transition: left 0.5s;
-}
-
-.ancient-button:hover::before {
-  left: 100%;
-}
-
-.ancient-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 
-    0 6px 20px rgba(255, 215, 0, 0.5),
-    inset 0 0 30px rgba(255, 255, 255, 0.2);
-  border-color: #FFF;
-}
-
-.ancient-button:active {
-  transform: translateY(0);
-}
-
-/* Input Fields - Stone Carved */
-input, textarea, select {
-  background: rgba(26, 20, 16, 0.9);
-  border: 2px solid var(--temple-gray);
-  color: var(--gold);
-  font-family: 'Philosopher', sans-serif;
-  padding: 0.75rem 1rem;
-  border-radius: 0;
-  transition: all 0.3s;
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
-}
-
-input:focus, textarea:focus, select:focus {
-  outline: none;
-  border-color: var(--gold);
-  box-shadow: 
-    inset 0 2px 8px rgba(0, 0, 0, 0.5),
-    0 0 15px rgba(255, 215, 0, 0.3);
-}
-
-input::placeholder, textarea::placeholder {
-  color: var(--bronze);
-  opacity: 0.7;
-}
-
-/* Scrollbar - Ancient Gold */
-::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--dark-stone);
-  border-left: 2px solid var(--temple-gray);
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, var(--dark-gold), var(--bronze));
-  border: 2px solid var(--dark-stone);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--gold);
-}
-
-/* Ancient Divider */
-.ancient-divider {
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  margin: 2rem 0;
-  position: relative;
-}
-
-.ancient-divider::before {
-  content: '◈';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: var(--dark-stone);
-  color: var(--gold);
-  padding: 0 1rem;
-  font-size: 1.2rem;
-}
-
-/* Stats/Numbers - Ancient Numerals Style */
-.ancient-number {
-  font-family: 'Cinzel', serif;
-  font-weight: 900;
-  font-size: 2rem;
-  background: linear-gradient(135deg, #FFD700, #FFA500);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-/* Leaderboard Trophy Icons */
-.trophy-gold {
-  color: #FFD700;
-  filter: drop-shadow(0 0 10px #FFD700);
-}
-
-.trophy-silver {
-  color: #C0C0C0;
-  filter: drop-shadow(0 0 10px #C0C0C0);
-}
-
-.trophy-bronze {
-  color: #CD7F32;
-  filter: drop-shadow(0 0 10px #CD7F32);
-}
-
-/* Notification/Alert - Ancient Scroll */
-.ancient-alert {
-  background: linear-gradient(135deg, rgba(139, 0, 0, 0.9), rgba(139, 0, 0, 0.7));
-  border: 3px solid var(--blood-red);
-  border-radius: 0;
-  padding: 1.5rem;
-  position: relative;
-  box-shadow: 
-    0 8px 32px rgba(139, 0, 0, 0.5),
-    inset 0 0 30px rgba(255, 0, 0, 0.1);
-}
-
-.ancient-alert::before,
-.ancient-alert::after {
-  content: '⚔';
-  position: absolute;
-  color: var(--gold);
-  font-size: 1.5rem;
-  text-shadow: 0 0 10px var(--gold);
-}
-
-.ancient-alert::before {
-  top: -15px;
-  left: 10px;
-}
-
-.ancient-alert::after {
-  bottom: -15px;
-  right: 10px;
-}
-
-/* Loading Animation - Ancient Hourglass */
-.ancient-loader {
-  border: 4px solid var(--temple-gray);
-  border-top: 4px solid var(--gold);
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  animation: spin 1s linear infinite;
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Navigation - Temple Style */
-nav {
-  background: linear-gradient(135deg, rgba(26, 20, 16, 0.98) 0%, rgba(44, 36, 22, 0.98) 100%);
-  border-bottom: 3px solid var(--dark-gold);
-  box-shadow: 
-    0 4px 20px rgba(0, 0, 0, 0.9),
-    inset 0 -2px 10px rgba(255, 215, 0, 0.1);
-}
-
-/* Game Card Hover - Mystical Glow */
-.game-card {
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.game-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 
-    0 12px 40px rgba(255, 215, 0, 0.4),
-    0 0 30px rgba(255, 215, 0, 0.3);
-}
-
-.game-card:hover::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  background: linear-gradient(45deg, var(--gold), var(--bronze), var(--gold));
-  z-index: -1;
-  filter: blur(20px);
-  opacity: 0.6;
-  animation: rotate 3s linear infinite;
-}
-
-@keyframes rotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Text Selection */
-::selection {
-  background: var(--dark-gold);
-  color: var(--dark-stone);
-}
-
-/* Balance/Currency Display */
-.currency-display {
-  font-family: 'Cinzel', serif;
-  font-weight: 700;
-  color: var(--gold);
-  text-shadow: 
-    0 0 10px rgba(255, 215, 0, 0.6),
-    0 2px 4px rgba(0, 0, 0, 0.8);
-}
-
-/* Modal/Dialog - Ancient Gate */
-.ancient-modal {
-  background: linear-gradient(135deg, rgba(26, 20, 16, 0.98) 0%, rgba(44, 36, 22, 0.98) 100%);
-  border: 4px double var(--gold);
-  border-radius: 0;
-  box-shadow: 
-    0 20px 60px rgba(0, 0, 0, 0.9),
-    inset 0 0 40px rgba(255, 215, 0, 0.1),
-    0 0 0 8px rgba(184, 134, 11, 0.3);
-  position: relative;
-}
-
-/* Corner Ornaments */
-.ancient-modal::before {
-  content: '⟡';
-  position: absolute;
-  top: -20px;
-  left: -20px;
-  font-size: 2rem;
-  color: var(--gold);
-  text-shadow: 0 0 15px var(--gold);
-}
-
-.ancient-modal::after {
-  content: '⟡';
-  position: absolute;
-  bottom: -20px;
-  right: -20px;
-  font-size: 2rem;
-  color: var(--gold);
-  text-shadow: 0 0 15px var(--gold);
-}
-
-/* Utility Classes */
-.text-gold {
-  color: var(--gold);
-}
-
-.text-bronze {
-  color: var(--bronze);
-}
-
-.text-blood {
-  color: var(--blood-red);
-}
-
-.bg-stone {
-  background: var(--stone);
-}
-
-.bg-dark-stone {
-  background: var(--dark-stone);
-}
-
-.border-gold {
-  border-color: var(--gold);
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  h1 {
-    font-size: 2rem;
-  }
-  
-  .ancient-panel {
-    padding: 1rem;
-  }
-  
-  .ancient-button {
-    padding: 0.75rem 1.5rem;
-    font-size: 0.9rem;
-  }
-}
-
-/* Pulsing Glow Animation */
-@keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 40px rgba(255, 215, 0, 0.6);
-  }
-}
-
-.pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
-  }
+/* Ensure the gate animations play smoothly */
+.eld-opaque { transition: opacity .35s ease-in-out; }
