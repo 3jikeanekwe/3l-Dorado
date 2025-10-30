@@ -1,11 +1,11 @@
 /**
  * El Dorado Voice Announcer System
  * Deep, powerful voice like Mortal Kombat
+ * PLAYS EVERY TIME - No session storage
  */
 
 export class ElDoradoVoice {
   private audioContext: AudioContext | null = null
-  private hasPlayed: boolean = false
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -16,10 +16,9 @@ export class ElDoradoVoice {
   /**
    * Play "WELCOME TO EL DORADO" with deep voice
    * Uses Web Speech API with deep pitch
+   * REMOVED: hasPlayed check - now plays EVERY TIME
    */
   playWelcome() {
-    if (this.hasPlayed) return // Only play once per session
-    
     if ('speechSynthesis' in window) {
       // Cancel any ongoing speech
       window.speechSynthesis.cancel()
@@ -48,10 +47,6 @@ export class ElDoradoVoice {
       // Add dramatic pauses
       utterance.onstart = () => {
         this.playDramaticSound()
-      }
-
-      utterance.onend = () => {
-        this.hasPlayed = true
       }
 
       // Wait for voices to load
@@ -166,23 +161,11 @@ export class ElDoradoVoice {
       }, index * 100)
     })
   }
-
-  /**
-   * Reset for new session
-   */
-  reset() {
-    this.hasPlayed = false
-  }
 }
 
-// Create singleton instance
-let voiceInstance: ElDoradoVoice | null = null
-
+// Create NEW instance every time (no singleton caching)
 export function getVoiceAnnouncer(): ElDoradoVoice {
-  if (!voiceInstance) {
-    voiceInstance = new ElDoradoVoice()
-  }
-  return voiceInstance
+  return new ElDoradoVoice()
 }
 
 export default getVoiceAnnouncer
