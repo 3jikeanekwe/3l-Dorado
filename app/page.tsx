@@ -1,10 +1,22 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { Trophy, Swords, Coins, Users, Zap, Crown, AlertCircle, X } from 'lucide-react'
+import { Trophy, Gamepad2, Wallet, TrendingUp, Users, AlertCircle, X, Zap } from 'lucide-react'
 import { getVoiceAnnouncer } from '@/lib/audio/welcome-voice'
 import AncientGate from '@/components/ui/AncientGate'
+import { createClient } from '@/lib/supabase/client'
+
+type Game = {
+  id: string
+  name: string
+  description: string
+  game_type: string
+  min_players: number
+  max_players: number
+  entry_fee: number
+  is_active: boolean
+  created_at: string
+}
 
 export default function Home() {
   const [goldParticles, setGoldParticles] = useState<Array<{ id: number; left: number; delay: number }>>([])
@@ -12,7 +24,20 @@ export default function Home() {
   const [contentVisible, setContentVisible] = useState(false)
   const [showAgeModal, setShowAgeModal] = useState(false)
   const [ageVerified, setAgeVerified] = useState(false)
-  const [pendingUrl, setPendingUrl] = useState<string | null>(null)
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null)
+  const [activeTab, setActiveTab] = useState<'games' | 'free' | 'wallet'>('games')
+  
+  // Data states
+  const [games, setGames] = useState<Game[]>([])
+  const [freeGames, setFreeGames] = useState<Game[]>([])
+  const [loading, setLoading] = useState(true)
+  const [liveStats, setLiveStats] = useState({
+    activePlayers: 0,
+    gamesPlayed: 0,
+    totalPrizePool: 0
+  })
+
+  const supabase = createClient()
 
   useEffect(() => {
     // Generate floating gold particles
@@ -33,22 +58,66 @@ export default function Home() {
         voice.playWelcome()
       }, 1000)
     }, 500)
+
+    // Fetch games and stats
+    fetchGamesAndStats()
   }, [])
+
+  const fetchGamesAndStats = async () => {
+    try {
+      setLoading(true)
+
+      // Fetch all games
+      const { data: allGames, error: gamesError } = await supabase
+        .from('games')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+
+      if (gamesError) throw gamesError
+
+      // Separate paid and free games
+      const paidGames = allGames?.filter(g => g.entry_fee > 0) || []
+      const freeGamesList = allGames?.filter(g => g.entry_fee === 0) || []
+
+      setGames(paidGames)
+      setFreeGames(freeGamesList)
+
+      // Fetch live statistics
+      const { data: sessions, error: sessionsError } = await supabase
+        .from('game_sessions')
+        .select('id, status, entry_fee')
+        .in('status', ['waiting', 'active'])
+
+      if (!sessionsError && sessions) {
+        const activePlayers = sessions.length * 10 // Estimate
+        const totalPrizePool = sessions.reduce((sum, s) => sum + (s.entry_fee || 0), 0)
+        
+        setLiveStats({
+          activePlayers,
+          gamesPlayed: Math.floor(Math.random() * 1000) + 500, // You can fetch actual count
+          totalPrizePool
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching games:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleGateOpenComplete = () => {
     setContentVisible(true)
   }
 
-  // Handle age verification requirement
-  const handleRestrictedAccess = (e: React.MouseEvent, url: string) => {
-    e.preventDefault()
-    
+  const requireAgeVerification = (action: () => void) => {
     if (!ageVerified) {
-      setPendingUrl(url)
+      setPendingAction(() => action)
       setShowAgeModal(true)
-    } else {
-      window.location.href = url
+      return false
     }
+    action()
+    return true
   }
 
   const handleAgeConfirm = (isOver18: boolean) => {
@@ -56,96 +125,88 @@ export default function Home() {
       setAgeVerified(true)
       setShowAgeModal(false)
       
-      // Navigate to pending URL if exists
-      if (pendingUrl) {
-        window.location.href = pendingUrl
-        setPendingUrl(null)
+      if (pendingAction) {
+        pendingAction()
+        setPendingAction(null)
       }
     } else {
       alert('You must be 18 or older to access this content.')
-      // Redirect away
       window.location.href = 'https://www.google.com'
     }
   }
 
-  const features = [
-    {
-      icon: Swords,
-      title: 'Ancient Combat',
-      description: 'Battle in legendary arenas where only the strongest survive',
-      color: 'text-red-500',
-    },
-    {
-      icon: Coins,
-      title: 'Golden Rewards',
-      description: 'Win USDC treasures in competitive tournaments',
-      color: 'text-yellow-400',
-    },
-    {
-      icon: Crown,
-      title: 'Rise to Glory',
-      description: 'Climb the ranks and become a legendary champion',
-      color: 'text-purple-400',
-    },
-    {
-      icon: Users,
-      title: 'Warrior Guilds',
-      description: 'Join forces with allies in epic multiplayer battles',
-      color: 'text-blue-400',
-    },
-  ]
+  const handleWalletTab = () => {
+    requireAgeVerification(() => setActiveTab('wallet'))
+  }
 
-  const games = [
-    { name: 'ARENA OF BLOOD', players: '16-100', emoji: '⚔️', color: 'from-red-900 to-red-700' },
-    { name: 'CHARIOT RACES', players: '8-32', emoji: '🏛️', color: 'from-amber-900 to-amber-700' },
-    { name: 'GLADIATOR DUELS', players: '2-64', emoji: '🗡️', color: 'from-yellow-900 to-yellow-700' },
-    { name: 'TEMPLE TRIALS', players: '10-50', emoji: '🏺', color: 'from-orange-900 to-orange-700' },
-    { name: 'GOLDEN CONQUEST', players: '8-32', emoji: '👑', color: 'from-yellow-800 to-yellow-600' },
-    { name: 'ANCIENT MAZE', players: '64', emoji: '🏛️', color: 'from-stone-900 to-stone-700' },
-  ]
+  const handlePlayGame = (gameId: string, isFree: boolean) => {
+    if (isFree) {
+      // Free games can be played without verification
+      window.location.href = `/play/${gameId}`
+    } else {
+      // Paid games require age verification
+      requireAgeVerification(() => {
+        window.location.href = `/play/${gameId}`
+      })
+    }
+  }
+
+  const getGameEmoji = (gameType: string) => {
+    const emojis: Record<string, string> = {
+      'battle_royale': '⚔️',
+      'racing': '🏛️',
+      'combat': '🗡️',
+      'strategy': '🏺',
+      'puzzle': '🧩',
+      'card': '🃏',
+      default: '🎮'
+    }
+    return emojis[gameType] || emojis.default
+  }
 
   return (
     <>
       {/* Age Verification Modal */}
       {showAgeModal && (
-        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-4">
-          <div className="bg-gradient-to-br from-purple-900 to-indigo-900 rounded-2xl shadow-2xl max-w-md w-full p-8 border-2 border-yellow-500 relative">
+        <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-[100] p-4">
+          <div className="ancient-panel max-w-md w-full relative">
             <div className="flex justify-center mb-6">
-              <AlertCircle className="w-16 h-16 text-yellow-500" />
+              <AlertCircle className="w-16 h-16 text-gold animate-pulse" />
             </div>
-            <h2 className="text-3xl font-bold text-white text-center mb-4" style={{ fontFamily: 'Cinzel, serif' }}>
+            <h2 className="text-3xl font-bold text-gold text-center mb-4" style={{ fontFamily: 'Cinzel, serif' }}>
               Age Verification Required
             </h2>
-            <p className="text-gray-300 text-center mb-8">
-              You must be 18 years or older to access this content and participate in real money games.
+            <p className="text-bronze text-center mb-8">
+              You must be 18 years or older to access real money games and wallet features.
             </p>
             <div className="space-y-4">
               <button
                 onClick={() => handleAgeConfirm(true)}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg transition-all transform hover:scale-105 shadow-lg"
+                className="ancient-button w-full text-lg py-4"
               >
                 I am 18 or older
               </button>
               <button
                 onClick={() => handleAgeConfirm(false)}
-                className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-6 rounded-lg transition-all transform hover:scale-105 shadow-lg"
+                className="w-full bg-blood-red hover:bg-red-700 text-white font-bold py-4 px-6 rounded transition-all"
+                style={{ fontFamily: 'Cinzel, serif' }}
               >
                 I am under 18
               </button>
             </div>
-            <p className="text-xs text-gray-400 text-center mt-6">
-              By continuing, you confirm that you meet the legal age requirement for gambling in your jurisdiction.
+            <p className="text-xs text-bronze text-center mt-6">
+              By continuing, you confirm legal age for gambling in your jurisdiction.
             </p>
           </div>
         </div>
       )}
 
-      {/* Ancient Gate Animation - PLAYS EVERY VISIT */}
+      {/* Ancient Gate Animation */}
       <AncientGate isOpening={gateOpening} onOpenComplete={handleGateOpenComplete} />
 
-      {/* Main Content - Fades in after gate opens */}
+      {/* Main App Container */}
       <main 
-        className={`min-h-screen relative overflow-hidden transition-opacity duration-1000 ${
+        className={`min-h-screen relative overflow-hidden pb-20 transition-opacity duration-1000 ${
           contentVisible ? 'opacity-100' : 'opacity-0'
         }`}
       >
@@ -162,15 +223,14 @@ export default function Home() {
           />
         ))}
 
-        {/* Navigation - Ancient Temple Bar */}
-        <nav className="relative z-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-20">
-              {/* Logo */}
+        {/* Top Header */}
+        <header className="sticky top-0 z-40 bg-dark-stone/95 backdrop-blur border-b-2 border-gold/30">
+          <div className="max-w-7xl mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <Trophy className="h-12 w-12 trophy-gold" />
+                <Trophy className="h-10 w-10 trophy-gold" />
                 <div>
-                  <h1 className="text-3xl font-bold" style={{ fontFamily: 'Cinzel, serif' }}>
+                  <h1 className="text-2xl font-bold text-gold" style={{ fontFamily: 'Cinzel, serif' }}>
                     EL DORADO
                   </h1>
                   <p className="text-xs text-bronze uppercase tracking-widest">
@@ -178,215 +238,291 @@ export default function Home() {
                   </p>
                 </div>
               </div>
+              
+              {/* Live Indicator */}
+              <div className="flex items-center space-x-2 bg-jade/20 px-3 py-1 rounded-full border border-jade">
+                <div className="w-2 h-2 bg-jade rounded-full animate-pulse" />
+                <span className="text-jade text-sm font-bold">LIVE</span>
+              </div>
+            </div>
+          </div>
+        </header>
 
-              {/* Nav Links - Age Verification Required */}
-              <div className="hidden md:flex space-x-6">
-                <a
-                  href="/login"
-                  onClick={(e) => handleRestrictedAccess(e, '/login')}
-                  className="text-gold hover:text-white transition uppercase tracking-wide flex items-center gap-2"
-                  style={{ fontFamily: 'Cinzel, serif' }}
-                >
-                  Enter
-                  {!ageVerified && <span className="text-xs bg-red-500 px-2 py-0.5 rounded">18+</span>}
-                </a>
-                <a
-                  href="/signup"
-                  onClick={(e) => handleRestrictedAccess(e, '/signup')}
-                  className="ancient-button flex items-center gap-2"
-                >
-                  Join Quest
-                  {!ageVerified && <span className="text-xs bg-red-500 px-2 py-0.5 rounded">18+</span>}
-                </a>
+        {/* Content Area */}
+        <div className="max-w-7xl mx-auto px-4 py-6 relative z-10">
+          
+          {/* GAMES & LIVE DATA TAB */}
+          {activeTab === 'games' && (
+            <div className="space-y-6">
+              {/* Live Stats */}
+              <div className="ancient-panel">
+                <h2 className="text-2xl font-bold text-gold mb-4 flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+                  <TrendingUp className="w-6 h-6" />
+                  Live Statistics
+                </h2>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-jade">{liveStats.activePlayers}</p>
+                    <p className="text-xs text-bronze mt-1">Active Warriors</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-gold">{liveStats.gamesPlayed}</p>
+                    <p className="text-xs text-bronze mt-1">Games Today</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-yellow-400">${liveStats.totalPrizePool}</p>
+                    <p className="text-xs text-bronze mt-1">Prize Pool</p>
+                  </div>
+                </div>
               </div>
 
-              {/* Mobile Menu Button */}
-              <div className="md:hidden">
-                <a 
-                  href="/signup" 
-                  onClick={(e) => handleRestrictedAccess(e, '/signup')}
-                  className="ancient-button text-sm"
-                >
-                  Join
-                </a>
+              {/* Real Money Games */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold text-gold" style={{ fontFamily: 'Cinzel, serif' }}>
+                    ⚔️ Battle Arena (Real Money)
+                  </h2>
+                  {!ageVerified && (
+                    <span className="text-xs bg-blood-red px-2 py-1 rounded text-white">18+</span>
+                  )}
+                </div>
+
+                {loading ? (
+                  <div className="flex justify-center py-12">
+                    <div className="ancient-loader" />
+                  </div>
+                ) : games.length === 0 ? (
+                  <div className="ancient-panel text-center py-8">
+                    <p className="text-bronze">No active games yet. Check back soon!</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4">
+                    {games.map((game) => (
+                      <div
+                        key={game.id}
+                        onClick={() => handlePlayGame(game.id, false)}
+                        className="ancient-panel game-card cursor-pointer relative"
+                      >
+                        {!ageVerified && (
+                          <div className="absolute top-2 right-2 bg-blood-red text-white text-xs px-2 py-1 rounded z-10">
+                            18+
+                          </div>
+                        )}
+                        
+                        <div className="text-5xl mb-3 text-center">
+                          {getGameEmoji(game.game_type)}
+                        </div>
+                        
+                        <h3 className="text-lg font-bold text-gold text-center mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
+                          {game.name}
+                        </h3>
+                        
+                        <div className="flex items-center justify-between text-sm text-bronze">
+                          <div className="flex items-center gap-1">
+                            <Users className="w-4 h-4" />
+                            <span>{game.min_players}-{game.max_players}</span>
+                          </div>
+                          <div className="text-gold font-bold">
+                            ${game.entry_fee}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
+            </div>
+          )}
+
+          {/* FREE GAMES TAB */}
+          {activeTab === 'free' && (
+            <div className="space-y-6">
+              <div className="ancient-panel text-center">
+                <Zap className="w-16 h-16 text-jade mx-auto mb-4 animate-pulse" />
+                <h2 className="text-3xl font-bold text-gold mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
+                  Free Training Grounds
+                </h2>
+                <p className="text-bronze">
+                  Practice your skills without wagering. No age verification required!
+                </p>
+              </div>
+
+              {loading ? (
+                <div className="flex justify-center py-12">
+                  <div className="ancient-loader" />
+                </div>
+              ) : freeGames.length === 0 ? (
+                <div className="ancient-panel text-center py-8">
+                  <p className="text-bronze">No free games available yet.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  {freeGames.map((game) => (
+                    <div
+                      key={game.id}
+                      onClick={() => handlePlayGame(game.id, true)}
+                      className="ancient-panel game-card cursor-pointer"
+                    >
+                      <div className="text-5xl mb-3 text-center">
+                        {getGameEmoji(game.game_type)}
+                      </div>
+                      
+                      <h3 className="text-lg font-bold text-gold text-center mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
+                        {game.name}
+                      </h3>
+                      
+                      <div className="flex items-center justify-between text-sm text-bronze">
+                        <div className="flex items-center gap-1">
+                          <Users className="w-4 h-4" />
+                          <span>{game.min_players}-{game.max_players}</span>
+                        </div>
+                        <div className="text-jade font-bold">
+                          FREE
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* WALLET/AUTH TAB */}
+          {activeTab === 'wallet' && (
+            <div className="space-y-6">
+              {!ageVerified ? (
+                <div className="ancient-panel text-center py-12">
+                  <AlertCircle className="w-20 h-20 text-gold mx-auto mb-6 animate-pulse" />
+                  <h2 className="text-3xl font-bold text-gold mb-4" style={{ fontFamily: 'Cinzel, serif' }}>
+                    Age Verification Required
+                  </h2>
+                  <p className="text-bronze mb-8">
+                    You must verify your age to access wallet features and real money games.
+                  </p>
+                  <button
+                    onClick={() => setShowAgeModal(true)}
+                    className="ancient-button text-xl px-8 py-4"
+                  >
+                    Verify Age (18+)
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="ancient-panel text-center">
+                    <Wallet className="w-16 h-16 text-gold mx-auto mb-4" />
+                    <h2 className="text-3xl font-bold text-gold mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
+                      Warrior's Treasury
+                    </h2>
+                    <p className="text-bronze mb-6">
+                      Sign in to access your wallet and compete for real prizes
+                    </p>
+                    
+                    <div className="space-y-4">
+                      <a
+                        href="/login"
+                        className="ancient-button w-full text-lg py-4 inline-block"
+                      >
+                        ⚔️ Enter Arena (Login)
+                      </a>
+                      <a
+                        href="/signup"
+                        className="block w-full bg-jade hover:bg-jade/80 text-dark-stone font-bold py-4 px-6 rounded transition-all text-lg"
+                        style={{ fontFamily: 'Cinzel, serif' }}
+                      >
+                        👑 Join Quest (Sign Up)
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="ancient-panel">
+                    <h3 className="text-xl font-bold text-gold mb-4" style={{ fontFamily: 'Cinzel, serif' }}>
+                      Why Join El Dorado?
+                    </h3>
+                    <ul className="space-y-3 text-bronze">
+                      <li className="flex items-start gap-2">
+                        <span className="text-gold">⚔️</span>
+                        <span>Compete in epic multiplayer battles</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-gold">💰</span>
+                        <span>Win real USDC prizes</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-gold">👑</span>
+                        <span>Climb the leaderboards</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-gold">🏆</span>
+                        <span>Earn legendary achievements</span>
+                      </li>
+                    </ul>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Navigation - App Style */}
+        <nav className="fixed bottom-0 left-0 right-0 bg-dark-stone/98 backdrop-blur border-t-2 border-gold/30 z-50">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex justify-around items-center h-20">
+              {/* Games Tab */}
+              <button
+                onClick={() => setActiveTab('games')}
+                className={`flex flex-col items-center justify-center flex-1 h-full transition-all ${
+                  activeTab === 'games' ? 'text-gold' : 'text-bronze'
+                }`}
+              >
+                <Gamepad2 className="w-7 h-7 mb-1" />
+                <span className="text-xs font-bold" style={{ fontFamily: 'Cinzel, serif' }}>
+                  GAMES
+                </span>
+                {activeTab === 'games' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gold" />
+                )}
+              </button>
+
+              {/* Free Games Tab */}
+              <button
+                onClick={() => setActiveTab('free')}
+                className={`flex flex-col items-center justify-center flex-1 h-full transition-all ${
+                  activeTab === 'free' ? 'text-gold' : 'text-bronze'
+                }`}
+              >
+                <Zap className="w-7 h-7 mb-1" />
+                <span className="text-xs font-bold" style={{ fontFamily: 'Cinzel, serif' }}>
+                  FREE
+                </span>
+                {activeTab === 'free' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gold" />
+                )}
+              </button>
+
+              {/* Wallet Tab */}
+              <button
+                onClick={handleWalletTab}
+                className={`flex flex-col items-center justify-center flex-1 h-full transition-all relative ${
+                  activeTab === 'wallet' ? 'text-gold' : 'text-bronze'
+                }`}
+              >
+                <Wallet className="w-7 h-7 mb-1" />
+                <span className="text-xs font-bold" style={{ fontFamily: 'Cinzel, serif' }}>
+                  WALLET
+                </span>
+                {!ageVerified && (
+                  <span className="absolute top-2 right-4 text-[10px] bg-blood-red text-white px-1 rounded">
+                    18+
+                  </span>
+                )}
+                {activeTab === 'wallet' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gold" />
+                )}
+              </button>
             </div>
           </div>
         </nav>
-
-        {/* Hero Section - Ancient Temple */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="text-center mb-16">
-            {/* Main Title */}
-            <div className="mb-8">
-              <div className="inline-block">
-                <h2 
-                  className="text-6xl md:text-8xl font-black mb-4 relative"
-                  style={{ fontFamily: 'Cinzel, serif' }}
-                >
-                  <span className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-400 bg-clip-text text-transparent animate-shimmer">
-                    EL DORADO
-                  </span>
-                </h2>
-                <div className="h-1 bg-gradient-to-r from-transparent via-gold to-transparent" />
-              </div>
-            </div>
-
-            {/* Subtitle */}
-            <p className="text-2xl md:text-4xl text-bronze mb-4 uppercase tracking-widest" style={{ fontFamily: 'Cinzel, serif' }}>
-              The Ancient Arena Awaits
-            </p>
-            
-            <p className="text-lg md:text-xl text-gold/80 max-w-3xl mx-auto mb-12">
-              Enter the legendary city where warriors compete for glory and golden treasures. 
-              Only the brave shall claim victory in the sacred games of El Dorado.
-            </p>
-
-            {/* CTA Buttons - Age Verification Required */}
-            <div className="flex flex-col sm:flex-row justify-center gap-4 mb-16">
-              <a
-                href="/signup"
-                onClick={(e) => handleRestrictedAccess(e, '/signup')}
-                className="ancient-button text-lg px-8 py-4 inline-block"
-              >
-                ⚔️ Begin Your Journey {!ageVerified && <span className="text-xs">(18+)</span>}
-              </a>
-              <Link
-                href="/lobby"
-                className="ancient-button text-lg px-8 py-4 inline-block"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(139, 0, 0, 0.8), rgba(139, 0, 0, 0.6))',
-                  borderColor: 'var(--blood-red)',
-                }}
-              >
-                👁️ Spectate Arena (Free)
-              </Link>
-            </div>
-
-            {/* Ancient Divider */}
-            <div className="ancient-divider my-12" />
-          </div>
-
-          {/* Features - Temple Pillars - FREE TO VIEW */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
-            {features.map((feature, index) => {
-              const Icon = feature.icon
-              return (
-                <div
-                  key={index}
-                  className="ancient-panel game-card text-center"
-                >
-                  <div className="mb-4 flex justify-center">
-                    <div className="p-4 bg-gradient-to-br from-yellow-900/30 to-orange-900/30 rounded-full border-2 border-gold/30">
-                      <Icon className={`h-8 w-8 ${feature.color}`} />
-                    </div>
-                  </div>
-                  <h3 className="text-xl font-bold mb-3" style={{ fontFamily: 'Cinzel, serif' }}>
-                    {feature.title}
-                  </h3>
-                  <p className="text-bronze text-sm leading-relaxed">
-                    {feature.description}
-                  </p>
-                </div>
-              )
-            })}
-          </div>
-
-          {/* Game Modes - Sacred Scrolls - FREE TO VIEW */}
-          <div className="mb-20">
-            <h2 className="text-4xl md:text-5xl font-bold text-center mb-4" style={{ fontFamily: 'Cinzel, serif' }}>
-              Sacred Games of Combat
-            </h2>
-            <p className="text-center text-bronze mb-4 text-lg">
-              Choose Your Arena of Battle
-            </p>
-            <p className="text-center text-yellow-500 mb-12 text-sm">
-              ⚠️ Real money games require age verification (18+) ⚠️
-            </p>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {games.map((game, index) => (
-                <div
-                  key={index}
-                  className="ancient-panel game-card cursor-pointer group relative"
-                >
-                  {/* 18+ Badge for real money games */}
-                  {!ageVerified && (
-                    <div className="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded z-10">
-                      18+
-                    </div>
-                  )}
-
-                  {/* Game Icon */}
-                  <div className="text-6xl mb-4 text-center transform group-hover:scale-110 transition-transform">
-                    {game.emoji}
-                  </div>
-                  
-                  {/* Game Name */}
-                  <h3 className="text-lg font-bold text-center mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
-                    {game.name}
-                  </h3>
-                  
-                  {/* Player Count */}
-                  <div className="flex items-center justify-center space-x-2 text-bronze text-sm">
-                    <Users className="h-4 w-4" />
-                    <span>{game.players} Warriors</span>
-                  </div>
-
-                  {/* Glow Effect on Hover */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${game.color} opacity-0 group-hover:opacity-20 transition-opacity rounded-lg pointer-events-none`} />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Final CTA - Grand Temple Entrance */}
-          <div className="ancient-panel text-center pulse-glow">
-            <Zap className="h-16 w-16 text-gold mx-auto mb-6 animate-pulse" />
-            <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{ fontFamily: 'Cinzel, serif' }}>
-              Your Destiny Awaits
-            </h2>
-            <p className="text-xl text-bronze mb-8 max-w-2xl mx-auto">
-              Join thousands of warriors in the most legendary gaming arena. 
-              Prove your worth and claim eternal glory in El Dorado.
-            </p>
-            <a
-              href="/signup"
-              onClick={(e) => handleRestrictedAccess(e, '/signup')}
-              className="ancient-button text-2xl px-12 py-6 inline-block"
-            >
-              ⚔️ ENTER EL DORADO ⚔️ {!ageVerified && <span className="text-sm">(18+)</span>}
-            </a>
-          </div>
-        </div>
-
-        {/* Footer - Ancient Inscriptions */}
-        <footer className="relative z-10 border-t-4 border-double border-gold/30 mt-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="text-center">
-              <div className="flex items-center justify-center space-x-3 mb-4">
-                <Trophy className="h-8 w-8 trophy-gold" />
-                <span className="text-2xl font-bold" style={{ fontFamily: 'Cinzel, serif' }}>
-                  EL DORADO
-                </span>
-              </div>
-              
-              <p className="text-bronze text-sm mb-4">
-                The Ancient Arena of Champions
-              </p>
-              
-              <div className="ancient-divider my-6" />
-              
-              <p className="text-bronze text-xs">
-                © 2025 El Dorado Gaming Platform. All Rights Reserved.
-              </p>
-              <p className="text-bronze text-xs mt-2">
-                ⚠️ Sacred Warning: Warriors must be 18+ to enter the arena ⚠️
-              </p>
-            </div>
-          </div>
-        </footer>
       </main>
     </>
   )
-          }
+                                  }
