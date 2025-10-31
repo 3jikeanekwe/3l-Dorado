@@ -45,3 +45,11 @@ const config: Config = {
   plugins: [],
 }
 export default config
+
+theme: {
+  extend: {
+    colors: {
+      gold: '#FFD700',
+    },
+  },
+},
